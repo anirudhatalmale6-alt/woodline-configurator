@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Woodline Product Configurator
  * Description: Custom product configurator for Woodline Timber Shop - gates and garage doors with width/height/material pricing
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Woodline Timber
  * Requires Plugins: woocommerce
  */
@@ -42,8 +42,8 @@ class Woodline_Configurator {
     public function enqueue_assets() {
         if (!is_product()) return;
 
-        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '1.0.0');
-        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '1.0.0', true);
+        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '1.1.0');
+        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '1.1.0', true);
         wp_localize_script('wlc-configurator', 'wlc_ajax', [
             'url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('wlc_nonce'),
@@ -74,55 +74,75 @@ class Woodline_Configurator {
         $pricing_json = wp_json_encode($pricing);
         ?>
         <div id="wlc-configurator">
-            <h3 class="wlc-title">Configure Your Order</h3>
+            <h3 class="wlc-heading">Configure &amp; Buy in 3 Easy Steps</h3>
 
-            <div class="wlc-form">
-                <div class="wlc-field">
-                    <label for="wlc-product-type">Product Type</label>
-                    <select id="wlc-product-type" name="wlc_product_type">
-                        <option value="">-- Select --</option>
-                        <option value="gates">Gates</option>
-                        <option value="garage_doors">Garage Doors</option>
-                    </select>
+            <div class="wlc-step" id="wlc-step-1">
+                <div class="wlc-step-header">
+                    <span class="wlc-step-number">1</span>
+                    <span class="wlc-step-title">Choose Your Product</span>
+                    <span class="wlc-step-status" id="wlc-step-1-status"></span>
                 </div>
-
-                <div class="wlc-field" id="wlc-style-field" style="display:none;">
-                    <label for="wlc-style">Style</label>
-                    <select id="wlc-style" name="wlc_style">
-                        <option value="">-- Select --</option>
-                    </select>
-                </div>
-
-                <div class="wlc-field" id="wlc-material-field" style="display:none;">
-                    <label for="wlc-material">Material</label>
-                    <select id="wlc-material" name="wlc_material">
-                        <option value="">-- Select --</option>
-                    </select>
-                </div>
-
-                <div class="wlc-field" id="wlc-width-field" style="display:none;">
-                    <label for="wlc-width">Width</label>
-                    <select id="wlc-width" name="wlc_width">
-                        <option value="">-- Select --</option>
-                    </select>
-                </div>
-
-                <div class="wlc-field" id="wlc-height-field" style="display:none;">
-                    <label for="wlc-height">Height</label>
-                    <select id="wlc-height" name="wlc_height">
-                        <option value="">-- Select --</option>
-                    </select>
+                <div class="wlc-step-body">
+                    <div class="wlc-row">
+                        <label for="wlc-product-type">Product Type</label>
+                        <select id="wlc-product-type" name="wlc_product_type">
+                            <option value="">Select product type...</option>
+                            <option value="gates">Gates</option>
+                            <option value="garage_doors">Garage Doors</option>
+                        </select>
+                    </div>
+                    <div class="wlc-row" id="wlc-style-field" style="display:none;">
+                        <label for="wlc-style">Style</label>
+                        <select id="wlc-style" name="wlc_style">
+                            <option value="">Select style...</option>
+                        </select>
+                    </div>
+                    <div class="wlc-row" id="wlc-material-field" style="display:none;">
+                        <label for="wlc-material">Wood Type</label>
+                        <select id="wlc-material" name="wlc_material">
+                            <option value="">Select wood type...</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="wlc-price-display" id="wlc-price-display" style="display:none;">
-                <span class="wlc-price-label">Your Price:</span>
-                <span class="wlc-price-amount" id="wlc-price-amount">&pound;0.00</span>
-                <span class="wlc-price-vat">inc. VAT</span>
+            <div class="wlc-step" id="wlc-step-2" style="display:none;">
+                <div class="wlc-step-header">
+                    <span class="wlc-step-number">2</span>
+                    <span class="wlc-step-title">Select Your Size</span>
+                    <span class="wlc-step-status" id="wlc-step-2-status"></span>
+                </div>
+                <div class="wlc-step-body">
+                    <div class="wlc-row" id="wlc-width-field">
+                        <label for="wlc-width">Width</label>
+                        <select id="wlc-width" name="wlc_width">
+                            <option value="">Select width...</option>
+                        </select>
+                    </div>
+                    <div class="wlc-row" id="wlc-height-field" style="display:none;">
+                        <label for="wlc-height">Height</label>
+                        <select id="wlc-height" name="wlc_height">
+                            <option value="">Select height...</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
-            <div class="wlc-no-price" id="wlc-no-price" style="display:none;">
-                <p>Price not available for this combination. Please call <strong>0800 3334445</strong> for a quote.</p>
+            <div class="wlc-step" id="wlc-step-3" style="display:none;">
+                <div class="wlc-step-header">
+                    <span class="wlc-step-number">3</span>
+                    <span class="wlc-step-title">Your Price</span>
+                </div>
+                <div class="wlc-step-body">
+                    <div class="wlc-price-line" id="wlc-price-display" style="display:none;">
+                        <span class="wlc-price-text">Total price for your customised product:</span>
+                        <span class="wlc-price-amount" id="wlc-price-amount">&pound;0.00</span>
+                        <span class="wlc-price-vat">inc. VAT</span>
+                    </div>
+                    <div class="wlc-no-price" id="wlc-no-price" style="display:none;">
+                        <p>Price on request for this combination. Please call <strong>0800 3334445</strong> for a quote.</p>
+                    </div>
+                </div>
             </div>
 
             <input type="hidden" id="wlc-configured-price" name="wlc_configured_price" value="">

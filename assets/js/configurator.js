@@ -15,7 +15,8 @@
     };
 
     function populateSelect(el, options, labelMap) {
-        el.html('<option value="">-- Select --</option>');
+        var placeholder = el.find('option:first').text() || '-- Select --';
+        el.html('<option value="">' + placeholder + '</option>');
         $.each(options, function(i, val) {
             var label = (labelMap && labelMap[val]) ? labelMap[val] : val;
             el.append('<option value="' + val + '">' + label + '</option>');
@@ -31,6 +32,19 @@
         $(id).find('select').val('');
     }
 
+    function showStep(id) {
+        $(id).slideDown(250);
+    }
+
+    function hideStep(id) {
+        $(id).slideUp(250);
+        $(id).find('select').val('');
+    }
+
+    function updateStepStatus(stepNum, text) {
+        $('#wlc-step-' + stepNum + '-status').text(text);
+    }
+
     function updatePrice() {
         var type = $('#wlc-product-type').val();
         var style = $('#wlc-style').val();
@@ -43,7 +57,12 @@
         $('#wlc-configured-price').val('');
         updateButtonState(false);
 
-        if (!type || !style || !material || !width || !height) return;
+        if (!type || !style || !material || !width || !height) {
+            hideStep('#wlc-step-3');
+            return;
+        }
+
+        showStep('#wlc-step-3');
 
         var data = pricing[type];
         if (!data || !data[style] || !data[style][material]) return;
@@ -58,14 +77,14 @@
 
         if (price !== null && price !== undefined) {
             $('#wlc-price-amount').text('£' + parseFloat(price).toFixed(2));
-            $('#wlc-price-display').slideDown(200);
+            $('#wlc-price-display').fadeIn(200);
             $('#wlc-configured-price').val(price);
 
-            var summary = labels[type] + ' - ' + labels[style] + ' - ' + labels[material] + ' | ' + width + ' x ' + height;
+            var summary = (labels[type] || type) + ' - ' + (labels[style] || style) + ' - ' + (labels[material] || material) + ' | ' + width + ' x ' + height;
             $('#wlc-config-summary').val(summary);
             updateButtonState(true);
         } else {
-            $('#wlc-no-price').slideDown(200);
+            $('#wlc-no-price').fadeIn(200);
             updateButtonState(false);
         }
     }
@@ -80,9 +99,8 @@
     }
 
     $(document).ready(function() {
-        // Mark the original configurator and remove any clones (sticky bars etc.)
+        // Remove duplicate configurators (theme sticky bar clones)
         $('[id="wlc-configurator"]').first().attr('data-wlc-original', 'true');
-
         function removeDuplicateConfigurators() {
             $('[id="wlc-configurator"]').not('[data-wlc-original]').remove();
         }
@@ -90,8 +108,6 @@
         setTimeout(removeDuplicateConfigurators, 300);
         setTimeout(removeDuplicateConfigurators, 1000);
         setTimeout(removeDuplicateConfigurators, 3000);
-
-        // Watch for dynamically cloned configurators
         var observer = new MutationObserver(function() {
             removeDuplicateConfigurators();
         });
@@ -104,19 +120,17 @@
 
             hideField('#wlc-style-field');
             hideField('#wlc-material-field');
-            hideField('#wlc-width-field');
-            hideField('#wlc-height-field');
+            hideStep('#wlc-step-2');
+            hideStep('#wlc-step-3');
+            updateStepStatus(1, '');
 
             if (!type || !pricing[type]) return;
 
             var styles = Object.keys(pricing[type]);
             if (type === 'garage_doors') {
-                // Garage doors only have flat_top
-                $('#wlc-style').val('flat_top');
                 populateSelect($('#wlc-style'), styles, labels);
                 $('#wlc-style').val('flat_top');
                 showField('#wlc-style-field');
-
                 var materials = Object.keys(pricing[type]['flat_top']);
                 populateSelect($('#wlc-material'), materials, labels);
                 showField('#wlc-material-field');
@@ -133,8 +147,8 @@
             var style = $(this).val();
 
             hideField('#wlc-material-field');
-            hideField('#wlc-width-field');
-            hideField('#wlc-height-field');
+            hideStep('#wlc-step-2');
+            hideStep('#wlc-step-3');
 
             if (!type || !style || !pricing[type] || !pricing[type][style]) return;
 
@@ -150,15 +164,20 @@
             var style = $('#wlc-style').val();
             var material = $(this).val();
 
-            hideField('#wlc-width-field');
             hideField('#wlc-height-field');
+            hideStep('#wlc-step-3');
 
-            if (!type || !style || !material) return;
+            if (!type || !style || !material) {
+                hideStep('#wlc-step-2');
+                return;
+            }
             if (!pricing[type] || !pricing[type][style] || !pricing[type][style][material]) return;
 
             var matData = pricing[type][style][material];
             populateSelect($('#wlc-width'), matData.widths);
-            showField('#wlc-width-field');
+            showStep('#wlc-step-2');
+
+            updateStepStatus(1, (labels[type] || type) + ' / ' + (labels[style] || style) + ' / ' + (labels[material] || material));
 
             updatePrice();
         });
@@ -168,7 +187,7 @@
             var style = $('#wlc-style').val();
             var material = $('#wlc-material').val();
 
-            hideField('#wlc-height-field');
+            hideStep('#wlc-step-3');
 
             if (!type || !style || !material) return;
             if (!pricing[type] || !pricing[type][style] || !pricing[type][style][material]) return;
