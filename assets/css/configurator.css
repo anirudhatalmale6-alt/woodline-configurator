@@ -1,0 +1,125 @@
+#wlc-configurator {
+    max-width: 500px;
+    margin: 0 0 30px 0;
+    padding: 25px 30px;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+#wlc-configurator .wlc-title {
+    margin: 0 0 20px 0;
+    padding: 0 0 12px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #2e6b3e;
+    letter-spacing: 0.3px;
+}
+
+#wlc-configurator .wlc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#wlc-configurator .wlc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#wlc-configurator .wlc-field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#wlc-configurator .wlc-field select {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    appearance: auto;
+    transition: border-color 0.2s;
+}
+
+#wlc-configurator .wlc-field select:focus {
+    outline: none;
+    border-color: #2e6b3e;
+    box-shadow: 0 0 0 2px rgba(46, 107, 62, 0.15);
+}
+
+#wlc-configurator .wlc-field select:disabled {
+    background: #eee;
+    color: #999;
+    cursor: not-allowed;
+}
+
+#wlc-configurator .wlc-price-display {
+    margin-top: 20px;
+    padding: 18px 20px;
+    background: #2e6b3e;
+    border-radius: 6px;
+    text-align: center;
+    color: #fff;
+}
+
+#wlc-configurator .wlc-price-label {
+    display: block;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+#wlc-configurator .wlc-price-amount {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+#wlc-configurator .wlc-price-vat {
+    display: block;
+    font-size: 12px;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+#wlc-configurator .wlc-no-price {
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    text-align: center;
+    color: #856404;
+    font-size: 14px;
+}
+
+#wlc-configurator .wlc-no-price p {
+    margin: 0;
+}
+
+.single-product .cart .single_add_to_cart_button {
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    #wlc-configurator {
+        padding: 18px 16px;
+        max-width: 100%;
+    }
+
+    #wlc-configurator .wlc-price-amount {
+        font-size: 26px;
+    }
+}
