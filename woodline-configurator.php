@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Woodline Product Configurator
  * Description: Custom product configurator for Woodline Timber Shop - gates and garage doors with width/height/material pricing
- * Version: 1.1.0
+ * Version: 2.0.0
  * Author: Woodline Timber
  * Requires Plugins: woocommerce
  */
@@ -23,6 +23,17 @@ class Woodline_Configurator {
         return self::$instance;
     }
 
+    private $labels = [
+        'gates' => 'Gates',
+        'garage_doors' => 'Garage Doors',
+        'flat_top' => 'Flat Top',
+        'swan_neck' => 'Swan Neck',
+        'pine' => 'Pine',
+        'oak' => 'Oak',
+        'iroko' => 'Iroko',
+        'acoya' => 'Acoya',
+    ];
+
     public function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('woocommerce_before_add_to_cart_form', [$this, 'render_configurator']);
@@ -31,38 +42,73 @@ class Woodline_Configurator {
         add_filter('woocommerce_get_item_data', [$this, 'display_cart_item_data'], 10, 2);
         add_action('woocommerce_before_calculate_totals', [$this, 'set_cart_item_price']);
         add_action('woocommerce_checkout_create_order_line_item', [$this, 'add_order_item_meta'], 10, 4);
-        add_action('wp_ajax_wlc_get_price', [$this, 'ajax_get_price']);
-        add_action('wp_ajax_nopriv_wlc_get_price', [$this, 'ajax_get_price']);
         add_filter('woocommerce_product_single_add_to_cart_text', [$this, 'change_button_text']);
-
-        // Hide default price on single product
         add_filter('woocommerce_get_price_html', [$this, 'hide_default_price'], 10, 2);
+
+        // Admin: product meta box
+        add_action('add_meta_boxes', [$this, 'add_product_meta_box']);
+        add_action('woocommerce_process_product_meta', [$this, 'save_product_meta']);
     }
 
     public function enqueue_assets() {
         if (!is_product()) return;
-
-        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '1.1.0');
-        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '1.1.0', true);
-        wp_localize_script('wlc-configurator', 'wlc_ajax', [
-            'url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wlc_nonce'),
-        ]);
+        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '2.0.0');
+        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '2.0.0', true);
     }
 
     public function hide_default_price($price_html, $product) {
         if (is_product() && $product->get_id() === get_queried_object_id()) {
-            return '';
+            $product_type = get_post_meta($product->get_id(), '_wlc_product_type', true);
+            if ($product_type) return '';
         }
         return $price_html;
     }
 
     public function change_button_text($text) {
-        return 'Add to Cart';
+        global $product;
+        if ($product && get_post_meta($product->get_id(), '_wlc_product_type', true)) {
+            return 'Add to Cart';
+        }
+        return $text;
     }
 
     public function get_pricing_data() {
         return include WLC_PLUGIN_DIR . 'includes/pricing-data.php';
+    }
+
+    // Admin meta box
+    public function add_product_meta_box() {
+        add_meta_box('wlc_config_meta', 'Woodline Configurator Settings', [$this, 'render_meta_box'], 'product', 'side', 'default');
+    }
+
+    public function render_meta_box($post) {
+        $product_type = get_post_meta($post->ID, '_wlc_product_type', true);
+        $style = get_post_meta($post->ID, '_wlc_style', true);
+        wp_nonce_field('wlc_save_meta', 'wlc_meta_nonce');
+        ?>
+        <p>
+            <label><strong>Product Type:</strong></label><br>
+            <select name="_wlc_product_type" style="width:100%">
+                <option value="">None (no configurator)</option>
+                <option value="gates" <?php selected($product_type, 'gates'); ?>>Gates</option>
+                <option value="garage_doors" <?php selected($product_type, 'garage_doors'); ?>>Garage Doors</option>
+            </select>
+        </p>
+        <p>
+            <label><strong>Style:</strong></label><br>
+            <select name="_wlc_style" style="width:100%">
+                <option value="">None</option>
+                <option value="flat_top" <?php selected($style, 'flat_top'); ?>>Flat Top</option>
+                <option value="swan_neck" <?php selected($style, 'swan_neck'); ?>>Swan Neck</option>
+            </select>
+        </p>
+        <?php
+    }
+
+    public function save_product_meta($post_id) {
+        if (!isset($_POST['wlc_meta_nonce']) || !wp_verify_nonce($_POST['wlc_meta_nonce'], 'wlc_save_meta')) return;
+        update_post_meta($post_id, '_wlc_product_type', sanitize_text_field($_POST['_wlc_product_type'] ?? ''));
+        update_post_meta($post_id, '_wlc_style', sanitize_text_field($_POST['_wlc_style'] ?? ''));
     }
 
     public function render_configurator() {
@@ -70,50 +116,52 @@ class Woodline_Configurator {
         if ($rendered) return;
         $rendered = true;
 
+        global $product;
+        $product_id = $product->get_id();
+        $product_type = get_post_meta($product_id, '_wlc_product_type', true);
+        $style = get_post_meta($product_id, '_wlc_style', true);
+
+        if (!$product_type) return;
+
         $pricing = $this->get_pricing_data();
-        $pricing_json = wp_json_encode($pricing);
+
+        // Get available materials for this product type + style
+        $available_data = [];
+        if (isset($pricing[$product_type][$style])) {
+            $available_data = $pricing[$product_type][$style];
+        }
+
+        $config = [
+            'product_type' => $product_type,
+            'style' => $style,
+            'pricing' => $available_data,
+            'labels' => $this->labels,
+        ];
+        $config_json = wp_json_encode($config);
+
+        $style_label = $this->labels[$style] ?? $style;
+        $type_label = $this->labels[$product_type] ?? $product_type;
         ?>
         <div id="wlc-configurator">
-            <h3 class="wlc-heading">Configure &amp; Buy in 3 Easy Steps</h3>
+            <h3 class="wlc-heading">Configure &amp; Buy</h3>
+
+            <input type="hidden" name="wlc_product_type" value="<?php echo esc_attr($product_type); ?>">
+            <input type="hidden" name="wlc_style" value="<?php echo esc_attr($style); ?>">
 
             <div class="wlc-step" id="wlc-step-1">
                 <div class="wlc-step-header">
                     <span class="wlc-step-number">1</span>
-                    <span class="wlc-step-title">Choose Your Product</span>
+                    <span class="wlc-step-title">Size &amp; Wood Type</span>
                     <span class="wlc-step-status" id="wlc-step-1-status"></span>
                 </div>
                 <div class="wlc-step-body">
-                    <div class="wlc-row">
-                        <label for="wlc-product-type">Product Type</label>
-                        <select id="wlc-product-type" name="wlc_product_type">
-                            <option value="">Select product type...</option>
-                            <option value="gates">Gates</option>
-                            <option value="garage_doors">Garage Doors</option>
-                        </select>
-                    </div>
-                    <div class="wlc-row" id="wlc-style-field" style="display:none;">
-                        <label for="wlc-style">Style</label>
-                        <select id="wlc-style" name="wlc_style">
-                            <option value="">Select style...</option>
-                        </select>
-                    </div>
-                    <div class="wlc-row" id="wlc-material-field" style="display:none;">
+                    <div class="wlc-row" id="wlc-material-field">
                         <label for="wlc-material">Wood Type</label>
                         <select id="wlc-material" name="wlc_material">
                             <option value="">Select wood type...</option>
                         </select>
                     </div>
-                </div>
-            </div>
-
-            <div class="wlc-step" id="wlc-step-2" style="display:none;">
-                <div class="wlc-step-header">
-                    <span class="wlc-step-number">2</span>
-                    <span class="wlc-step-title">Select Your Size</span>
-                    <span class="wlc-step-status" id="wlc-step-2-status"></span>
-                </div>
-                <div class="wlc-step-body">
-                    <div class="wlc-row" id="wlc-width-field">
+                    <div class="wlc-row" id="wlc-width-field" style="display:none;">
                         <label for="wlc-width">Width</label>
                         <select id="wlc-width" name="wlc_width">
                             <option value="">Select width...</option>
@@ -125,24 +173,37 @@ class Woodline_Configurator {
                             <option value="">Select height...</option>
                         </select>
                     </div>
+                    <div class="wlc-inline-price" id="wlc-inline-price" style="display:none;">
+                        <span class="wlc-price-text">Total price:</span>
+                        <span class="wlc-price-amount" id="wlc-price-amount">&pound;0.00</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="wlc-step" id="wlc-step-3" style="display:none;">
+            <div class="wlc-step wlc-step-placeholder" id="wlc-step-ironmongery" style="display:none;">
+                <div class="wlc-step-header">
+                    <span class="wlc-step-number">2</span>
+                    <span class="wlc-step-title">Ironmongery</span>
+                    <span class="wlc-step-status">Coming soon</span>
+                </div>
+            </div>
+
+            <div class="wlc-step wlc-step-placeholder" id="wlc-step-treatment" style="display:none;">
                 <div class="wlc-step-header">
                     <span class="wlc-step-number">3</span>
-                    <span class="wlc-step-title">Your Price</span>
+                    <span class="wlc-step-title">Choose a Treatment</span>
+                    <span class="wlc-step-status">Coming soon</span>
                 </div>
-                <div class="wlc-step-body">
-                    <div class="wlc-price-line" id="wlc-price-display" style="display:none;">
-                        <span class="wlc-price-text">Total price for your customised product:</span>
-                        <span class="wlc-price-amount" id="wlc-price-amount">&pound;0.00</span>
-                        <span class="wlc-price-vat">inc. VAT</span>
-                    </div>
-                    <div class="wlc-no-price" id="wlc-no-price" style="display:none;">
-                        <p>Price on request for this combination. Please call <strong>0800 3334445</strong> for a quote.</p>
-                    </div>
-                </div>
+            </div>
+
+            <div class="wlc-total" id="wlc-total" style="display:none;">
+                <span class="wlc-total-text">Total price for your customised product:</span>
+                <span class="wlc-total-amount" id="wlc-total-amount">&pound;0.00</span>
+                <span class="wlc-total-vat">inc. VAT</span>
+            </div>
+
+            <div class="wlc-no-price" id="wlc-no-price" style="display:none;">
+                <p>Price on request for this combination. Please call <strong>0800 3334445</strong> for a quote.</p>
             </div>
 
             <input type="hidden" id="wlc-configured-price" name="wlc_configured_price" value="">
@@ -150,22 +211,17 @@ class Woodline_Configurator {
         </div>
 
         <script type="text/javascript">
-            var wlcPricingData = <?php echo $pricing_json; ?>;
+            var wlcConfig = <?php echo $config_json; ?>;
         </script>
         <?php
     }
 
     public function validate_configuration($passed, $product_id, $quantity) {
-        if (empty($_POST['wlc_product_type'])) {
-            wc_add_notice('Please select a product type.', 'error');
-            return false;
-        }
-        if (empty($_POST['wlc_style'])) {
-            wc_add_notice('Please select a style.', 'error');
-            return false;
-        }
+        $product_type = get_post_meta($product_id, '_wlc_product_type', true);
+        if (!$product_type) return $passed;
+
         if (empty($_POST['wlc_material'])) {
-            wc_add_notice('Please select a material.', 'error');
+            wc_add_notice('Please select a wood type.', 'error');
             return false;
         }
         if (empty($_POST['wlc_width'])) {
@@ -177,7 +233,7 @@ class Woodline_Configurator {
             return false;
         }
         if (empty($_POST['wlc_configured_price']) || floatval($_POST['wlc_configured_price']) <= 0) {
-            wc_add_notice('Price could not be determined for this configuration. Please contact us.', 'error');
+            wc_add_notice('Price could not be determined. Please contact us.', 'error');
             return false;
         }
         return $passed;
@@ -201,20 +257,7 @@ class Woodline_Configurator {
     public function display_cart_item_data($item_data, $cart_item) {
         if (!empty($cart_item['wlc_config'])) {
             $config = $cart_item['wlc_config'];
-            $labels = [
-                'gates' => 'Gates',
-                'garage_doors' => 'Garage Doors',
-                'flat_top' => 'Flat Top',
-                'swan_neck' => 'Swan Neck',
-                'pine' => 'Pine',
-                'oak' => 'Oak',
-                'iroko' => 'Iroko',
-                'acoya' => 'Acoya',
-            ];
-
-            $item_data[] = ['key' => 'Type', 'value' => $labels[$config['product_type']] ?? $config['product_type']];
-            $item_data[] = ['key' => 'Style', 'value' => $labels[$config['style']] ?? $config['style']];
-            $item_data[] = ['key' => 'Material', 'value' => $labels[$config['material']] ?? $config['material']];
+            $item_data[] = ['key' => 'Wood Type', 'value' => $this->labels[$config['material']] ?? $config['material']];
             $item_data[] = ['key' => 'Width', 'value' => $config['width']];
             $item_data[] = ['key' => 'Height', 'value' => $config['height']];
         }
@@ -235,47 +278,10 @@ class Woodline_Configurator {
     public function add_order_item_meta($item, $cart_item_key, $values, $order) {
         if (!empty($values['wlc_config'])) {
             $config = $values['wlc_config'];
-            $labels = [
-                'gates' => 'Gates',
-                'garage_doors' => 'Garage Doors',
-                'flat_top' => 'Flat Top',
-                'swan_neck' => 'Swan Neck',
-                'pine' => 'Pine',
-                'oak' => 'Oak',
-                'iroko' => 'Iroko',
-                'acoya' => 'Acoya',
-            ];
-
-            $item->add_meta_data('Type', $labels[$config['product_type']] ?? $config['product_type']);
-            $item->add_meta_data('Style', $labels[$config['style']] ?? $config['style']);
-            $item->add_meta_data('Material', $labels[$config['material']] ?? $config['material']);
+            $item->add_meta_data('Wood Type', $this->labels[$config['material']] ?? $config['material']);
             $item->add_meta_data('Width', $config['width']);
             $item->add_meta_data('Height', $config['height']);
         }
-    }
-
-    public function ajax_get_price() {
-        check_ajax_referer('wlc_nonce', 'nonce');
-
-        $product_type = sanitize_text_field($_POST['product_type'] ?? '');
-        $style = sanitize_text_field($_POST['style'] ?? '');
-        $material = sanitize_text_field($_POST['material'] ?? '');
-        $width = sanitize_text_field($_POST['width'] ?? '');
-        $height = sanitize_text_field($_POST['height'] ?? '');
-
-        $pricing = $this->get_pricing_data();
-
-        $price = null;
-        if (isset($pricing[$product_type][$style][$material])) {
-            $data = $pricing[$product_type][$style][$material];
-            $w_idx = array_search($width, $data['widths']);
-            $h_idx = array_search($height, $data['heights']);
-            if ($w_idx !== false && $h_idx !== false && isset($data['prices'][$h_idx][$w_idx])) {
-                $price = $data['prices'][$h_idx][$w_idx];
-            }
-        }
-
-        wp_send_json_success(['price' => $price]);
     }
 }
 

@@ -1,18 +1,11 @@
 (function($) {
     'use strict';
 
-    var pricing = window.wlcPricingData || {};
+    if (!window.wlcConfig) return;
 
-    var labels = {
-        flat_top: 'Flat Top',
-        swan_neck: 'Swan Neck',
-        pine: 'Pine',
-        oak: 'Oak',
-        iroko: 'Iroko',
-        acoya: 'Acoya',
-        gates: 'Gates',
-        garage_doors: 'Garage Doors'
-    };
+    var config = window.wlcConfig;
+    var pricing = config.pricing || {};
+    var labels = config.labels || {};
 
     function populateSelect(el, options, labelMap) {
         var placeholder = el.find('option:first').text() || '-- Select --';
@@ -32,42 +25,23 @@
         $(id).find('select').val('');
     }
 
-    function showStep(id) {
-        $(id).slideDown(250);
-    }
-
-    function hideStep(id) {
-        $(id).slideUp(250);
-        $(id).find('select').val('');
-    }
-
-    function updateStepStatus(stepNum, text) {
-        $('#wlc-step-' + stepNum + '-status').text(text);
-    }
-
     function updatePrice() {
-        var type = $('#wlc-product-type').val();
-        var style = $('#wlc-style').val();
         var material = $('#wlc-material').val();
         var width = $('#wlc-width').val();
         var height = $('#wlc-height').val();
 
-        $('#wlc-price-display').hide();
+        $('#wlc-inline-price').hide();
+        $('#wlc-total').hide();
         $('#wlc-no-price').hide();
         $('#wlc-configured-price').val('');
+        $('#wlc-config-summary').val('');
         updateButtonState(false);
 
-        if (!type || !style || !material || !width || !height) {
-            hideStep('#wlc-step-3');
-            return;
-        }
+        if (!material || !width || !height) return;
 
-        showStep('#wlc-step-3');
+        var matData = pricing[material];
+        if (!matData) return;
 
-        var data = pricing[type];
-        if (!data || !data[style] || !data[style][material]) return;
-
-        var matData = data[style][material];
         var wIdx = matData.widths.indexOf(width);
         var hIdx = matData.heights.indexOf(height);
 
@@ -76,13 +50,21 @@
         var price = matData.prices[hIdx][wIdx];
 
         if (price !== null && price !== undefined) {
-            $('#wlc-price-amount').text('£' + parseFloat(price).toFixed(2));
-            $('#wlc-price-display').fadeIn(200);
+            var formatted = '£' + parseFloat(price).toFixed(2);
+            $('#wlc-price-amount').text(formatted);
+            $('#wlc-inline-price').fadeIn(200);
+            $('#wlc-total-amount').text(formatted);
+            $('#wlc-total').fadeIn(200);
             $('#wlc-configured-price').val(price);
 
-            var summary = (labels[type] || type) + ' - ' + (labels[style] || style) + ' - ' + (labels[material] || material) + ' | ' + width + ' x ' + height;
+            var typeLabel = labels[config.product_type] || config.product_type;
+            var styleLabel = labels[config.style] || config.style;
+            var matLabel = labels[material] || material;
+            var summary = typeLabel + ' - ' + styleLabel + ' - ' + matLabel + ' | ' + width + ' x ' + height;
             $('#wlc-config-summary').val(summary);
+
             updateButtonState(true);
+            $('#wlc-step-1-status').text(matLabel + ' / ' + width + ' x ' + height);
         } else {
             $('#wlc-no-price').fadeIn(200);
             updateButtonState(false);
@@ -99,7 +81,6 @@
     }
 
     $(document).ready(function() {
-        // Remove duplicate configurators (theme sticky bar clones)
         $('[id="wlc-configurator"]').first().attr('data-wlc-original', 'true');
         function removeDuplicateConfigurators() {
             $('[id="wlc-configurator"]').not('[data-wlc-original]').remove();
@@ -115,84 +96,40 @@
 
         updateButtonState(false);
 
-        $('#wlc-product-type').on('change', function() {
-            var type = $(this).val();
-
-            hideField('#wlc-style-field');
-            hideField('#wlc-material-field');
-            hideStep('#wlc-step-2');
-            hideStep('#wlc-step-3');
-            updateStepStatus(1, '');
-
-            if (!type || !pricing[type]) return;
-
-            var styles = Object.keys(pricing[type]);
-            if (type === 'garage_doors') {
-                populateSelect($('#wlc-style'), styles, labels);
-                $('#wlc-style').val('flat_top');
-                showField('#wlc-style-field');
-                var materials = Object.keys(pricing[type]['flat_top']);
-                populateSelect($('#wlc-material'), materials, labels);
-                showField('#wlc-material-field');
-            } else {
-                populateSelect($('#wlc-style'), styles, labels);
-                showField('#wlc-style-field');
-            }
-
-            updatePrice();
-        });
-
-        $('#wlc-style').on('change', function() {
-            var type = $('#wlc-product-type').val();
-            var style = $(this).val();
-
-            hideField('#wlc-material-field');
-            hideStep('#wlc-step-2');
-            hideStep('#wlc-step-3');
-
-            if (!type || !style || !pricing[type] || !pricing[type][style]) return;
-
-            var materials = Object.keys(pricing[type][style]);
-            populateSelect($('#wlc-material'), materials, labels);
-            showField('#wlc-material-field');
-
-            updatePrice();
-        });
+        var materials = Object.keys(pricing);
+        populateSelect($('#wlc-material'), materials, labels);
 
         $('#wlc-material').on('change', function() {
-            var type = $('#wlc-product-type').val();
-            var style = $('#wlc-style').val();
             var material = $(this).val();
 
+            hideField('#wlc-width-field');
             hideField('#wlc-height-field');
-            hideStep('#wlc-step-3');
+            $('#wlc-inline-price').hide();
+            $('#wlc-total').hide();
+            $('#wlc-no-price').hide();
+            $('#wlc-step-1-status').text('');
+            updateButtonState(false);
 
-            if (!type || !style || !material) {
-                hideStep('#wlc-step-2');
-                return;
-            }
-            if (!pricing[type] || !pricing[type][style] || !pricing[type][style][material]) return;
+            if (!material || !pricing[material]) return;
 
-            var matData = pricing[type][style][material];
+            var matData = pricing[material];
             populateSelect($('#wlc-width'), matData.widths);
-            showStep('#wlc-step-2');
-
-            updateStepStatus(1, (labels[type] || type) + ' / ' + (labels[style] || style) + ' / ' + (labels[material] || material));
-
-            updatePrice();
+            showField('#wlc-width-field');
         });
 
         $('#wlc-width').on('change', function() {
-            var type = $('#wlc-product-type').val();
-            var style = $('#wlc-style').val();
             var material = $('#wlc-material').val();
 
-            hideStep('#wlc-step-3');
+            hideField('#wlc-height-field');
+            $('#wlc-inline-price').hide();
+            $('#wlc-total').hide();
+            $('#wlc-no-price').hide();
+            updateButtonState(false);
 
-            if (!type || !style || !material) return;
-            if (!pricing[type] || !pricing[type][style] || !pricing[type][style][material]) return;
+            if (!material || !$(this).val()) return;
+            if (!pricing[material]) return;
 
-            var matData = pricing[type][style][material];
+            var matData = pricing[material];
             populateSelect($('#wlc-height'), matData.heights);
             showField('#wlc-height-field');
 
@@ -202,6 +139,8 @@
         $('#wlc-height').on('change', function() {
             updatePrice();
         });
+
+        $('#wlc-step-ironmongery, #wlc-step-treatment').show();
     });
 
 })(jQuery);
