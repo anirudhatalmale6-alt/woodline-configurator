@@ -81,12 +81,13 @@ class Woodline_Configurator {
 
         add_action('add_meta_boxes', [$this, 'add_product_meta_box']);
         add_action('woocommerce_process_product_meta', [$this, 'save_product_meta']);
+
     }
 
     public function enqueue_assets() {
         if (!is_product()) return;
-        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.0.0');
-        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '3.0.0', true);
+        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.1.0');
+        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '3.1.0', true);
     }
 
     public function hide_default_price($price_html, $product) {

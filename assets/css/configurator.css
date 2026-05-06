@@ -203,6 +203,23 @@
     font-family: gotham, sans-serif !important;
 }
 
+/* Reorder product summary: description immediately after title */
+.summary.entry-summary {
+    display: flex !important;
+    flex-direction: column !important;
+}
+.summary.entry-summary > .woocommerce-breadcrumb { order: 1 !important; }
+.summary.entry-summary > .product_title { order: 2 !important; }
+.summary.entry-summary > .woocommerce-product-details__short-description { order: 3 !important; }
+.summary.entry-summary > .price { order: 4 !important; display: none !important; }
+.summary.entry-summary > .ast-shipping-text { order: 4 !important; display: none !important; }
+.summary.entry-summary > div:not([class]),
+.summary.entry-summary > #wlc-configurator { order: 5 !important; }
+.summary.entry-summary > script { order: 5 !important; }
+.summary.entry-summary > form.cart { order: 6 !important; }
+.summary.entry-summary > .product_meta { order: 7 !important; }
+.summary.entry-summary > .ast-single-product-payments { order: 8 !important; }
+
 /* Add to cart button styling override */
 .single-product form.cart {
     margin-top: 0 !important;
