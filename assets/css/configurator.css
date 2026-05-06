@@ -2,17 +2,7 @@
     max-width: 100%;
     margin: 0 0 25px 0;
     padding: 0;
-}
-
-#wlc-configurator .wlc-heading {
-    text-align: center;
-    font-size: 22px;
-    font-weight: 400;
-    color: #b5812a;
-    margin: 0 0 20px 0;
-    padding: 0;
-    letter-spacing: 0.3px;
-    border: none;
+    font-family: gotham, sans-serif;
 }
 
 /* Steps */
@@ -42,6 +32,7 @@
     border-radius: 50%;
     font-size: 15px;
     font-weight: 600;
+    font-family: gotham, sans-serif;
     flex-shrink: 0;
 }
 
@@ -49,6 +40,7 @@
     font-size: 17px;
     font-weight: 600;
     color: #333;
+    font-family: gotham, sans-serif;
     flex: 1;
 }
 
@@ -56,6 +48,7 @@
     font-size: 13px;
     color: #999;
     font-style: italic;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-step-body {
@@ -80,6 +73,7 @@
     color: #555;
     min-width: 120px;
     flex-shrink: 0;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-row select {
@@ -87,6 +81,7 @@
     max-width: 280px;
     padding: 9px 12px;
     font-size: 14px;
+    font-family: gotham, sans-serif;
     border: 1px solid #ccc;
     border-radius: 3px;
     background: #fff;
@@ -112,6 +107,7 @@
     font-size: 16px;
     color: #b5812a;
     font-weight: 400;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-price-amount {
@@ -119,12 +115,14 @@
     font-weight: 700;
     color: #333;
     margin-left: 6px;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-price-vat {
     font-size: 13px;
     color: #888;
     margin-left: 4px;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-no-price {
@@ -135,6 +133,7 @@
     border-radius: 3px;
     color: #8a6d1b;
     font-size: 14px;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-no-price p {
@@ -167,6 +166,7 @@
 #wlc-configurator .wlc-total-text {
     font-size: 15px;
     color: #555;
+    font-family: gotham, sans-serif;
     flex: 1;
 }
 
@@ -174,11 +174,13 @@
     font-size: 26px;
     font-weight: 700;
     color: #333;
+    font-family: gotham, sans-serif;
 }
 
 #wlc-configurator .wlc-total-vat {
     font-size: 13px;
     color: #888;
+    font-family: gotham, sans-serif;
 }
 
 /* Placeholder steps */
@@ -188,6 +190,17 @@
 
 #wlc-configurator .wlc-step-placeholder .wlc-step-number {
     background: #999;
+}
+
+/* Product page font overrides to match site */
+.single-product .product_title,
+.single-product .entry-title {
+    font-family: gotham, sans-serif !important;
+}
+
+.single-product .woocommerce-product-details__short-description,
+.single-product .woocommerce-product-details__short-description p {
+    font-family: gotham, sans-serif !important;
 }
 
 /* Add to cart button styling override */
@@ -202,6 +215,7 @@
     padding: 12px 35px !important;
     font-size: 15px !important;
     font-weight: 500 !important;
+    font-family: gotham, sans-serif !important;
     letter-spacing: 0.5px !important;
     border-radius: 25px !important;
     transition: background-color 0.3s !important;
@@ -218,10 +232,6 @@
 }
 
 @media (max-width: 600px) {
-    #wlc-configurator .wlc-heading {
-        font-size: 18px;
-    }
-
     #wlc-configurator .wlc-step-body {
         padding: 0 14px 14px 14px;
     }

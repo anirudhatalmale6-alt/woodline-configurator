@@ -202,8 +202,6 @@ class Woodline_Configurator {
         $step_num = 1;
         ?>
         <div id="wlc-configurator">
-            <h3 class="wlc-heading">Configure &amp; Buy</h3>
-
             <input type="hidden" name="wlc_product_type" value="<?php echo esc_attr($product_type); ?>">
             <input type="hidden" name="wlc_style" value="<?php echo esc_attr($style); ?>">
 
