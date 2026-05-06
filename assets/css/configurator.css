@@ -192,6 +192,17 @@
     background: #999;
 }
 
+/* Category/shop page product thumbnails - white square with image fitted */
+.woocommerce ul.products li.product a img,
+.woocommerce-page ul.products li.product a img {
+    background: #fff !important;
+    object-fit: contain !important;
+    aspect-ratio: 1 / 1 !important;
+    padding: 10px !important;
+    border: 1px solid #eee !important;
+    border-radius: 4px !important;
+}
+
 /* From price on category/shop pages */
 .wlc-from-price {
     font-family: gotham, sans-serif;
