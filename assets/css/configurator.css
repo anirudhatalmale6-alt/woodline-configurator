@@ -231,6 +231,11 @@
 .summary.entry-summary > .product_meta { order: 7 !important; }
 .summary.entry-summary > .ast-single-product-payments { order: 8 !important; }
 
+/* Hide description tabs - description already shown below title */
+.single-product .woocommerce-tabs {
+    display: none !important;
+}
+
 /* Add to cart button styling override */
 .single-product form.cart {
     margin-top: 0 !important;
