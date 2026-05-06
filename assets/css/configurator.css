@@ -192,6 +192,17 @@
     background: #999;
 }
 
+/* From price on category/shop pages */
+.wlc-from-price {
+    font-family: gotham, sans-serif;
+    font-size: 15px;
+    color: #555;
+}
+.wlc-from-price strong {
+    color: #333;
+    font-size: 18px;
+}
+
 /* Product page font overrides to match site */
 .single-product .product_title,
 .single-product .entry-title {

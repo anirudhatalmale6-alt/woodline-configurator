@@ -86,16 +86,43 @@ class Woodline_Configurator {
 
     public function enqueue_assets() {
         if (!is_product()) return;
-        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.1.0');
+        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.2.0');
         wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '3.1.0', true);
     }
 
     public function hide_default_price($price_html, $product) {
+        $product_type = get_post_meta($product->get_id(), '_wlc_product_type', true);
+        if (!$product_type) return $price_html;
+
         if (is_product() && $product->get_id() === get_queried_object_id()) {
-            $product_type = get_post_meta($product->get_id(), '_wlc_product_type', true);
-            if ($product_type) return '';
+            return '';
+        }
+
+        $style = get_post_meta($product->get_id(), '_wlc_style', true);
+        if ($product_type && $style) {
+            $min = $this->get_min_price($product_type, $style);
+            if ($min > 0) {
+                return '<span class="wlc-from-price">From <strong>&pound;' . number_format($min, 2) . '</strong></span>';
+            }
         }
         return $price_html;
+    }
+
+    private function get_min_price($product_type, $style) {
+        $pricing = $this->get_pricing_data();
+        if (!isset($pricing[$product_type][$style])) return 0;
+        $min = PHP_INT_MAX;
+        foreach ($pricing[$product_type][$style] as $material => $data) {
+            if (!isset($data['prices'])) continue;
+            foreach ($data['prices'] as $row) {
+                foreach ($row as $price) {
+                    if ($price > 0 && $price < $min) {
+                        $min = $price;
+                    }
+                }
+            }
+        }
+        return $min < PHP_INT_MAX ? $min : 0;
     }
 
     public function change_button_text($text) {
