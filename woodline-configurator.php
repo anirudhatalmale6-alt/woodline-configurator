@@ -87,7 +87,7 @@ class Woodline_Configurator {
 
     public function enqueue_assets() {
         if (is_product() || is_shop() || is_product_category() || is_product_tag()) {
-            wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.5.0');
+            wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.6.0');
         }
         if (is_product()) {
             wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '3.1.0', true);

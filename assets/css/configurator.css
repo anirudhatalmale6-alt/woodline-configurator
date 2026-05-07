@@ -192,18 +192,40 @@
     background: #999;
 }
 
-/* Category/shop page product thumbnails - white square with image fitted */
+/* Category/shop page product thumbnails - off-white square with image fitted */
 .woocommerce ul.products li.product a img,
 .woocommerce-page ul.products li.product a img {
-    background: #fff !important;
+    background: #f0ede8 !important;
     object-fit: contain !important;
     aspect-ratio: 1 / 1 !important;
     width: 100% !important;
     height: auto !important;
     padding: 10px !important;
-    border: 1px solid #eee !important;
+    border: 1px solid #e5e0d8 !important;
     border-radius: 4px !important;
     box-sizing: border-box !important;
+}
+
+/* Mobile category page cleanup */
+@media (max-width: 768px) {
+    .woocommerce .woocommerce-result-count,
+    .woocommerce-page .woocommerce-result-count {
+        font-size: 13px !important;
+    }
+    .woocommerce .woocommerce-ordering,
+    .woocommerce-page .woocommerce-ordering {
+        margin-bottom: 10px !important;
+    }
+    .woocommerce ul.products li.product,
+    .woocommerce-page ul.products li.product {
+        margin-bottom: 20px !important;
+    }
+    .woocommerce ul.products li.product .woocommerce-loop-product__title,
+    .woocommerce-page ul.products li.product .woocommerce-loop-product__title,
+    .woocommerce ul.products li.product h2,
+    .woocommerce-page ul.products li.product h2 {
+        font-size: 15px !important;
+    }
 }
 
 /* Category/shop page fonts - gotham */
