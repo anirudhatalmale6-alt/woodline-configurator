@@ -210,11 +210,13 @@
 @media (max-width: 768px) {
     .woocommerce .woocommerce-result-count,
     .woocommerce-page .woocommerce-result-count {
-        font-size: 13px !important;
+        display: none !important;
     }
     .woocommerce .woocommerce-ordering,
     .woocommerce-page .woocommerce-ordering {
-        margin-bottom: 10px !important;
+        width: 100% !important;
+        float: none !important;
+        margin-bottom: 15px !important;
     }
     .woocommerce ul.products li.product,
     .woocommerce-page ul.products li.product {
