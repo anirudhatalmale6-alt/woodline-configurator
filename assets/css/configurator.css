@@ -198,9 +198,30 @@
     background: #fff !important;
     object-fit: contain !important;
     aspect-ratio: 1 / 1 !important;
+    width: 100% !important;
+    height: auto !important;
     padding: 10px !important;
     border: 1px solid #eee !important;
     border-radius: 4px !important;
+    box-sizing: border-box !important;
+}
+
+/* Category/shop page fonts - gotham */
+.woocommerce ul.products li.product .woocommerce-loop-product__title,
+.woocommerce ul.products li.product h2,
+.woocommerce-page ul.products li.product .woocommerce-loop-product__title,
+.woocommerce-page ul.products li.product h2 {
+    font-family: gotham, sans-serif !important;
+}
+
+.woocommerce .term-description,
+.woocommerce-page .term-description,
+.woocommerce .woocommerce-products-header__title,
+.woocommerce-page .woocommerce-products-header__title,
+.woocommerce .page-title,
+.ast-archive-description .ast-archive-title,
+.woocommerce-products-header h1 {
+    font-family: gotham, sans-serif !important;
 }
 
 /* From price on category/shop pages */

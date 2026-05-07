@@ -78,6 +78,7 @@ class Woodline_Configurator {
         add_action('woocommerce_checkout_create_order_line_item', [$this, 'add_order_item_meta'], 10, 4);
         add_filter('woocommerce_product_single_add_to_cart_text', [$this, 'change_button_text']);
         add_filter('woocommerce_get_price_html', [$this, 'hide_default_price'], 10, 2);
+        add_filter('single_product_archive_thumbnail_size', [$this, 'use_full_thumbnail']);
 
         add_action('add_meta_boxes', [$this, 'add_product_meta_box']);
         add_action('woocommerce_process_product_meta', [$this, 'save_product_meta']);
@@ -85,9 +86,16 @@ class Woodline_Configurator {
     }
 
     public function enqueue_assets() {
-        if (!is_product()) return;
-        wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.4.0');
-        wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '3.1.0', true);
+        if (is_product() || is_shop() || is_product_category() || is_product_tag()) {
+            wp_enqueue_style('wlc-configurator', WLC_PLUGIN_URL . 'assets/css/configurator.css', [], '3.5.0');
+        }
+        if (is_product()) {
+            wp_enqueue_script('wlc-configurator', WLC_PLUGIN_URL . 'assets/js/configurator.js', ['jquery'], '3.1.0', true);
+        }
+    }
+
+    public function use_full_thumbnail() {
+        return 'large';
     }
 
     public function hide_default_price($price_html, $product) {
