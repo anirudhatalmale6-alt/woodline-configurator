@@ -9,6 +9,27 @@
 
 if (!defined('ABSPATH')) exit;
 
+// Swap large images for compressed versions
+add_filter('wp_get_attachment_url', function($url) {
+    $swaps = [
+        'uploads/2026/04/Layer-201.png' => 'uploads/2026/05/opt-Layer-201.jpg',
+        'uploads/2026/04/Layer-202.png' => 'uploads/2026/05/opt-Layer-202.jpg',
+        'uploads/2026/04/brown-wood-textured-background-with-design-space-scaled.jpg' => 'uploads/2026/05/opt-brown-wood-textured-background-with-design-space-scaled-1.jpg',
+    ];
+    foreach ($swaps as $old => $new) {
+        if (strpos($url, $old) !== false) {
+            return str_replace($old, $new, $url);
+        }
+    }
+    return $url;
+});
+
+// Preconnect hints for faster resource loading
+add_action('wp_head', function() {
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>' . "\n";
+    echo '<link rel="dns-prefetch" href="https://fonts.googleapis.com">' . "\n";
+}, 1);
+
 define('WLC_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WLC_PLUGIN_URL', plugin_dir_url(__FILE__));
 
